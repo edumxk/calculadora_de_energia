@@ -1,5 +1,6 @@
 <?php
-session_start();
+//include session management
+require_once 'session_management.php';
 
 // Caminho do arquivo de usuários
 $arquivoUsuarios = __DIR__ . "/usuarios.log";
@@ -21,8 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $usuariosExistentes = carregarUsuarios($arquivoUsuarios);
     $encontrou = false;
 
-    foreach ($usuariosExistentes as $u) {
-        list($usuarioArquivo, $senhaArquivo) = explode("|", $u);
+    foreach ($usuariosExistentes as $linhaUsuario) {
+        list($usuarioArquivo, $senhaArquivo) = explode("|", $linhaUsuario);
         if ($usuarioArquivo === $usuarioInformado && $senhaArquivo === $senhaInformada) {
             $encontrou = true;
             break;
@@ -30,12 +31,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($encontrou) {
-        // Faz login
         $_SESSION['nome'] = $usuarioInformado;
         header("Location: index.php");
         exit;
     } else {
-        $erro = "Credenciais inválidas. Verifique o usuário e a data de nascimento.";
+        $erro = "Credenciais inválidas. Verifique o usuário e a data de nascimento (senha).";
     }
 }
 ?>
@@ -53,8 +53,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         h1 {
             text-align: center;
             margin-bottom: 30px;
-            font-size: 2.0em;
-            color: #333;
         }
         .form-container {
             max-width: 500px;
@@ -95,6 +93,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-top: 10px;
             text-align: center;
         }
+        .register-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .register-container a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+        .register-container a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -106,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <label for="usuario">Nome de Usuário:</label>
         <input type="text" name="usuario" id="usuario" placeholder="Digite o usuário" required>
 
-        <label for="data_nascimento">Data de Nascimento (calendário):</label>
+        <label for="data_nascimento">Data de Nascimento (senha):</label>
         <input type="date" name="data_nascimento" id="data_nascimento" required>
         
         <button type="submit">Entrar</button>
@@ -115,6 +124,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="erro"><?php echo htmlspecialchars($erro); ?></div>
         <?php endif; ?>
     </form>
+
+    <!-- Botão/Link para tela de registro -->
+    <div class="register-container">
+        <p>Não tem conta? <a href="cadastro.php">Registre-se aqui</a></p>
+    </div>
 </div>
 
 </body>

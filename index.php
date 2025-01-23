@@ -1,12 +1,13 @@
 <?php
-session_start();
 
-// Se não houver usuário logado, redirecionar para a página de login
+//include session management
+require_once 'session_management.php';
+
+// Se não houver usuário logado, redirecionar para a tela de login
 if (!isset($_SESSION['nome'])) {
     header("Location: login.php");
     exit;
 }
-
 // Caminho do arquivo de log (histórico)
 $arquivoLog = __DIR__ . "/calculos.log";
 
@@ -19,6 +20,15 @@ function gravarLog($arquivo, $dados) {
     }
 }
 
+if (isset($_POST['excluir_linha'])) {
+    // Decodifica a linha recebida
+    $linhaParaExcluir = base64_decode($_POST['excluir_linha']);
+    // Chama a função que regrava o log sem a linha exata
+    regravarLogSemLinha($arquivoLog, $linhaParaExcluir);
+    // Recarrega o histórico
+    $historico = carregarHistorico($arquivoLog);
+}
+
 // Função para carregar histórico do arquivo de log e retornar array de linhas
 function carregarHistorico($arquivo) {
     if (!file_exists($arquivo)) {
@@ -29,12 +39,22 @@ function carregarHistorico($arquivo) {
 }
 
 // Função para regravar o log sem uma linha específica (exclusão)
-function regravarLogSemLinha($arquivo, $indiceExcluir) {
+function regravarLogSemLinha($arquivo, $linhaExata) {
     $linhas = carregarHistorico($arquivo);
-    if (isset($linhas[$indiceExcluir])) {
-        unset($linhas[$indiceExcluir]);
-        // Reescreve o log
+
+    foreach ($linhas as $key => $linha) {
+        // Se a linha do arquivo for exatamente igual à que queremos excluir
+        if ($linha === $linhaExata) {
+            unset($linhas[$key]);
+        }
+    }
+
+    // Reescreve o log sem a linha removida
+    if (!empty($linhas)) {
         file_put_contents($arquivo, implode("\n", $linhas) . "\n");
+    } else {
+        // Se todas foram removidas ou se estava vazio
+        file_put_contents($arquivo, "");
     }
 }
 
@@ -51,7 +71,7 @@ $historico = carregarHistorico($arquivoLog);
 // Trata exclusão via POST
 if (isset($_POST['excluir']) && is_numeric($_POST['excluir'])) {
     $indiceExcluir = (int) $_POST['excluir'];
-    regravarLogSemLinha($arquivoLog, $indiceExcluir);
+    
     // Recarrega o histórico após exclusão
     $historico = carregarHistorico($arquivoLog);
 } else {
@@ -271,6 +291,7 @@ if ($countHistorico > 0) {
         }
     </style>
     <script>
+        
     function limparCampos() {
         document.getElementById("velocidade").value = '';
         document.getElementById("peso").value = '';
@@ -354,7 +375,7 @@ if ($countHistorico > 0) {
     </div>
 
     <?php if (count($historico) > 0): ?>
-        <table>
+        <table id="dados">
             <thead>
             <tr>
                 <th>Data/Hora</th>
@@ -388,10 +409,14 @@ if ($countHistorico > 0) {
                     <td>
                         <!-- Exclusão via método POST -->
                         <form method="POST" style="display:inline;">
-                            <input type="hidden" name="excluir" value="<?php echo $indice; ?>" />
+                        <input 
+                            type="hidden" 
+                            name="excluir_linha" 
+                            value="<?php echo base64_encode($linha); ?>" 
+                            />
                             <button 
                                 type="submit" 
-                                class="botao-excluir" 
+                                class="botao-excluir"
                                 onclick="return confirm('Deseja realmente excluir esta linha?');">
                                 Excluir
                             </button>
@@ -424,6 +449,10 @@ if ($countHistorico > 0) {
         <p>Nenhum cálculo encontrado para o filtro aplicado.</p>
     <?php endif; ?>
 </div>
+<button class="botao" onclick="baixarCSV()">
+  <i class="fa fa-download"></i>
+  Baixar CSV
+</button>
 
 </body>
 </html>

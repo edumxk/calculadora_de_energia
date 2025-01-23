@@ -1,5 +1,6 @@
 <?php
-session_start();
+//include session management
+require_once 'session_management.php';
 
 // Arquivo de usuários (para fins de demonstração)
 $arquivoUsuarios = __DIR__ . "/usuarios.log";
@@ -113,6 +114,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-top: 10px;
             text-align: center;
         }
+        .register-container {
+            text-align: center;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -127,12 +132,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <label for="data_nascimento">Data de Nascimento (calendário):</label>
         <input type="date" name="data_nascimento" id="data_nascimento" required>
 
+        <div class="register-container">
+            <p>Já tem uma conta? <a href="login.php">entre aqui</a></p>
+        </div>
         <button type="submit">Cadastrar</button>
 
         <?php if (isset($erro)): ?>
             <div class="erro"><?php echo htmlspecialchars($erro); ?></div>
         <?php endif; ?>
+
+        
     </form>
+     
 </div>
 
 </body>
